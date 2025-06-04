@@ -19,33 +19,33 @@ Vagrant.configure("2") do |config|
         v.cpus = boxconfig[:cpus]
       end
       box.vm.provision "shell", inline: <<-SHELL
-        # Разрешаем подключение по паролю
+        # Р Р°Р·СЂРµС€Р°РµРј РїРѕРґРєР»СЋС‡РµРЅРёРµ РїРѕ РїР°СЂРѕР»СЋ
         sed -i 's/^PasswordAuthentication.*$/PasswordAuthentication yes/' /etc/ssh/sshd_config
         systemctl restart sshd.service
 
-        # Создаем пользователей otusadm и otus
+        # РЎРѕР·РґР°РµРј РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ otusadm Рё otus
         useradd otusadm
         useradd otus
 
-        # Устанавливаем пароли для пользователей
+        # РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїР°СЂРѕР»Рё РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
         echo "otusadm:Otus2022!" | chpasswd
         echo "otus:Otus2022!" | chpasswd
 
-        # Создаем группу admin
+        # РЎРѕР·РґР°РµРј РіСЂСѓРїРїСѓ admin
         groupadd -f admin
 
-        # Добавляем пользователей в группу admin
+        # Р”РѕР±Р°РІР»СЏРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ РІ РіСЂСѓРїРїСѓ admin
         usermod -a -G admin otusadm
         usermod -a -G admin root
         usermod -a -G admin vagrant
 
-        # Создаем скрипт контроля доступа /usr/local/bin/login.sh
+        # РЎРѕР·РґР°РµРј СЃРєСЂРёРїС‚ РєРѕРЅС‚СЂРѕР»СЏ РґРѕСЃС‚СѓРїР° /usr/local/bin/login.sh
         cat << 'EOF' > /usr/local/bin/login.sh
 #!/bin/bash
 
-# Проверяем, выходной ли день
+# РџСЂРѕРІРµСЂСЏРµРј, РІС‹С…РѕРґРЅРѕР№ Р»Рё РґРµРЅСЊ
 if [ $(date +%a) = "Sat" ] || [ $(date +%a) = "Sun" ]; then
-  # Проверяем, входит ли пользователь в группу admin
+  # РџСЂРѕРІРµСЂСЏРµРј, РІС…РѕРґРёС‚ Р»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІ РіСЂСѓРїРїСѓ admin
   if getent group admin | grep -qw "$PAM_USER"; then
     exit 0
   else
@@ -53,26 +53,26 @@ if [ $(date +%a) = "Sat" ] || [ $(date +%a) = "Sun" ]; then
   fi
 fi
 
-# Если день не выходной, разрешаем доступ
+# Р•СЃР»Рё РґРµРЅСЊ РЅРµ РІС‹С…РѕРґРЅРѕР№, СЂР°Р·СЂРµС€Р°РµРј РґРѕСЃС‚СѓРї
 exit 0
 EOF
 
-        # Делаем файл исполняемым
+        # Р”РµР»Р°РµРј С„Р°Р№Р» РёСЃРїРѕР»РЅСЏРµРјС‹Рј
         chmod +x /usr/local/bin/login.sh
 
-        # Добавляем pam_exec в файл /etc/pam.d/sshd
+        # Р”РѕР±Р°РІР»СЏРµРј pam_exec РІ С„Р°Р№Р» /etc/pam.d/sshd
         echo 'auth required pam_exec.so debug /usr/local/bin/login.sh' | tee -a /etc/pam.d/sshd
 
-        # Устанавливаем дату на 16 ноября 2014 года, 11:00
+        # РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РґР°С‚Сѓ РЅР° 16 РЅРѕСЏР±СЂСЏ 2014 РіРѕРґР°, 11:00
         date -s "2014-11-16 11:00:00"
 
-        # Устанавливаем Docker
+        # РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј Docker
         apt update && apt install -y docker.io
 
-        # Добавляем пользователя otus в группу docker
+        # Р”РѕР±Р°РІР»СЏРµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ otus РІ РіСЂСѓРїРїСѓ docker
         usermod -aG docker otus
 
-        # Разрешаем пользователю otus перезапускать Docker-сервис
+        # Р Р°Р·СЂРµС€Р°РµРј РїРѕР»СЊР·РѕРІР°С‚РµР»СЋ otus РїРµСЂРµР·Р°РїСѓСЃРєР°С‚СЊ Docker-СЃРµСЂРІРёСЃ
         echo 'otus ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart docker' | tee /etc/sudoers.d/docker
       SHELL
     end
